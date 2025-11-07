@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>安安的汉字学习卡</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .flashcard-container {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            transition: transform 0.6s ease-in-out, opacity 0.6s ease-in-out;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .flashcard.hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+        }
+
+        .flashcard.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .character {
+            font-size: 120px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            font-family: 'KaiTi', '楷体', serif;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .pinyin {
+            font-size: 32px;
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .meaning {
+            font-size: 20px;
+            color: #888;
+            text-align: center;
+            max-width: 80%;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        .btn-round {
+            background: linear-gradient(45deg, #ffecd2 0%, #fcb69f 100%);
+            color: #333;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .settings-panel, .manage-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .settings-panel.active, .manage-panel.active {
+            display: block;
+        }
+
+        .form-group {
+            margin: 15px 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+
+        .slider-value {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .word-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .word-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .word-item:last-child {
+            border-bottom: none;
+        }
+
+        .word-delete {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .progress {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .animation-hint {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        @media (max-width: 600px) {
+            .character {
+                font-size: 80px;
+            }
+            
+            .pinyin {
+                font-size: 24px;
+            }
+            
+            .flashcard-container {
+                height: 350px;
+            }
+            
+            .header {
+                font-size: 24px;
+            }
+            
+            .btn {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            安安的汉字学习卡
+        </div>
+        
+        <div class="main-content">
+            <div class="progress" id="progress">第 <span id="current">1</span> 张，共 <span id="total">10</span> 张</div>
+            
+            <div class="flashcard-container">
+                <div class="flashcard show" id="flashcard">
+                    <div class="character" id="character">人</div>
+                    <div class="pinyin" id="pinyin">rén</div>
+                    <div class="meaning" id="meaning">人类，指所有人</div>
+                    <div class="animation-hint">点击卡片翻页</div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="btn btn-primary" id="prev-btn">上一张</button>
+                <button class="btn btn-primary" id="next-btn">下一张</button>
+                <button class="btn btn-round" id="round-btn">开始新一轮</button>
+                <button class="btn btn-secondary" id="settings-btn">设置</button>
+                <button class="btn btn-secondary" id="manage-btn">管理词库</button>
+            </div>
+            
+            <div class="settings-panel" id="settings-panel">
+                <h3>学习设置</h3>
+                <div class="form-group">
+                    <label>每次学习闪卡数量：</label>
+                    <div class="slider-container">
+                        <input type="range" id="card-count-slider" min="1" max="50" value="10">
+                        <span class="slider-value" id="card-count-value">10</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" id="save-settings">保存设置</button>
+            </div>
+            
+            <div class="manage-panel" id="manage-panel">
+                <h3>词库管理</h3>
+                <div class="form-group">
+                    <label>添加新汉字：</label>
+                    <input type="text" id="new-character" placeholder="请输入汉字（1个字符）">
+                </div>
+                <div class="form-group">
+                    <label>拼音：</label>
+                    <input type="text" id="new-pinyin" placeholder="请输入拼音">
+                </div>
+                <div class="form-group">
+                    <label>汉字含义：</label>
+                    <textarea id="new-meaning" placeholder="请输入汉字的含义或解释" rows="3"></textarea>
+                </div>
+                <button class="btn btn-primary" id="add-character">添加汉字</button>
+                
+                <h4 style="margin-top: 20px;">词库中的汉字：</h4>
+                <div class="word-list" id="word-list">
+                    <!-- 汉字列表将在这里显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 预设词库数据 - 包含汉字、拼音和含义
+        const defaultWords = [
+            { character: "人", pinyin: "rén", meaning: "人类，指所有人" },
+            { character: "口", pinyin: "kǒu", meaning: "嘴巴，说话的器官" },
+            { character: "日", pinyin: "rì", meaning: "太阳，一天的时间单位" },
+            { character: "月", pinyin: "yuè", meaning: "月亮，月份" },
+            { character: "水", pinyin: "shuǐ", meaning: "液体，生命之源" },
+            { character: "火", pinyin: "huǒ", meaning: "燃烧的火焰" },
+            { character: "山", pinyin: "shān", meaning: "地面上高耸的部分" },
+            { character: "石", pinyin: "shí", meaning: "坚硬的矿物" },
+            { character: "田", pinyin: "tián", meaning: "种植庄稼的土地" },
+            { character: "木", pinyin: "mù", meaning: "树木，木材" },
+            { character: "金", pinyin: "jīn", meaning: "金属，黄金" },
+            { character: "土", pinyin: "tǔ", meaning: "土地，土壤" },
+            { character: "天", pinyin: "tiān", meaning: "天空，大自然" },
+            { character: "地", pinyin: "dì", meaning: "地面，地球" },
+            { character: "上", pinyin: "shàng", meaning: "位置在高处" },
+            { character: "下", pinyin: "xià", meaning: "位置在低处" },
+            { character: "左", pinyin: "zuǒ", meaning: "方位，右边的对面" },
+            { character: "右", pinyin: "yòu", meaning: "方位，左边的对面" },
+            { character: "大", pinyin: "dà", meaning: "体积、面积、数量等超过一般" },
+            { character: "小", pinyin: "xiǎo", meaning: "体积、面积、数量等不及一般" },
+            { character: "多", pinyin: "duō", meaning: "数量大，与少相对" },
+            { character: "少", pinyin: "shǎo", meaning: "数量小，与多相对" },
+            { character: "好", pinyin: "hǎo", meaning: "优点多，使人满意" },
+            { character: "学", pinyin: "xué", meaning: "学习，模仿" },
+            { character: "生", pinyin: "shēng", meaning: "生长，活的" },
+            { character: "老", pinyin: "lǎo", meaning: "年纪大，时间长" },
+            { character: "师", pinyin: "shī", meaning: "老师，专家" },
+            { character: "爸", pinyin: "bà", meaning: "父亲" },
+            { character: "妈", pinyin: "mā", meaning: "母亲" },
+            { character: "家", pinyin: "jiā", meaning: "住所，家庭" },
+            { character: "国", pinyin: "guó", meaning: "国家" },
+            { character: "一", pinyin: "yī", meaning: "最小的正整数" },
+            { character: "二", pinyin: "èr", meaning: "比一大一的整数" },
+            { character: "三", pinyin: "sān", meaning: "比二大一的整数" },
+            { character: "四", pinyin: "sì", meaning: "比三大一的整数" },
+            { character: "五", pinyin: "wǔ", meaning: "比四大一的整数" },
+            { character: "六", pinyin: "liù", meaning: "比五大一的整数" },
+            { character: "七", pinyin: "qī", meaning: "比六大一的整数" },
+            { character: "八", pinyin: "bā", meaning: "比七大一的整数" },
+            { character: "九", pinyin: "jiǔ", meaning: "比八大一的整数" },
+            { character: "十", pinyin: "shí", meaning: "比九大一的整数" },
+            { character: "中", pinyin: "zhōng", meaning: "方位，中心" },
+            { character: "民", pinyin: "mín", meaning: "人民，民众" },
+            { character: "我", pinyin: "wǒ", meaning: "自己，第一人称代词" },
+            { character: "你", pinyin: "nǐ", meaning: "第二人称代词" },
+            { character: "他", pinyin: "tā", meaning: "第三人称代词（男）" },
+            { character: "她", pinyin: "tā", meaning: "第三人称代词（女）" },
+            { character: "是", pinyin: "shì", meaning: "表示判断或肯定" },
+            { character: "的", pinyin: "de", meaning: "表示所属关系" },
+            { character: "了", pinyin: "le", meaning: "表示动作完成" },
+            { character: "在", pinyin: "zài", meaning: "表示存在或进行" },
+            { character: "有", pinyin: "yǒu", meaning: "存在，拥有" },
+            { character: "和", pinyin: "hé", meaning: "连接词，与" },
+            { character: "就", pinyin: "jiù", meaning: "表示时间或条件" },
+            { character: "不", pinyin: "bù", meaning: "表示否定" },
+            { character: "这", pinyin: "zhè", meaning: "指示代词，这个" },
+            { character: "那", pinyin: "nà", meaning: "指示代词，那个" },
+            { character: "也", pinyin: "yě", meaning: "表示同样" },
+            { character: "把", pinyin: "bǎ", meaning: "介词，用来" },
+            { character: "被", pinyin: "bèi", meaning: "表示被动" },
+            { character: "从", pinyin: "cóng", meaning: "起点，自从" },
+            { character: "到", pinyin: "dào", meaning: "达到，到达" },
+            { character: "时", pinyin: "shí", meaning: "时间，时刻" },
+            { character: "会", pinyin: "huì", meaning: "能够，会议" },
+            { character: "可", pinyin: "kě", meaning: "可以，可能" },
+            { character: "以", pinyin: "yǐ", meaning: "用来，因为" },
+            { character: "要", pinyin: "yào", meaning: "需要，请求" },
+            { character: "能", pinyin: "néng", meaning: "能力，能够" },
+            { character: "还", pinyin: "hái", meaning: "仍然，还" },
+            { character: "过", pinyin: "guò", meaning: "经过，过去" },
+            { character: "得", pinyin: "dé", meaning: "得到，必须" },
+            { character: "地", pinyin: "de", meaning: "结构助词" },
+            { character: "为", pinyin: "wèi", meaning: "为了，成为" },
+            { character: "所", pinyin: "suǒ", meaning: "处所，用在动词前" },
+            { character: "然", pinyin: "rán", meaning: "如此，然后" },
+            { character: "而", pinyin: "ér", meaning: "连接词，而且" },
+            { character: "及", pinyin: "jí", meaning: "和，到达" },
+            { character: "或", pinyin: "huò", meaning: "或者，也许" },
+            { character: "其", pinyin: "qí", meaning: "代词，那个" },
+            { character: "此", pinyin: "cǐ", meaning: "这个，这里" },
+            { character: "应", pinyin: "yīng", meaning: "应该，应答" },
+            { character: "于", pinyin: "yú", meaning: "在，对于" }
+        ];
+
+        // 从localStorage获取词库数据，如果不存在则使用默认数据
+        function getWords() {
+            const words = localStorage.getItem('chineseWords');
+            if (words) {
+                return JSON.parse(words);
+            } else {
+                localStorage.setItem('chineseWords', JSON.stringify(defaultWords));
+                return defaultWords;
+            }
+        }
+
+        // 保存词库数据到localStorage
+        function saveWords(words) {
+            localStorage.setItem('chineseWords', JSON.stringify(words));
+        }
+
+        // 获取设置的闪卡数量
+        function getCardCount() {
+            const count = localStorage.getItem('cardCount');
+            return count ? parseInt(count) : 10;
+        }
+
+        // 保存设置的闪卡数量
+        function saveCardCount(count) {
+            localStorage.setItem('cardCount', count.toString());
+        }
+
+        // 随机选择指定数量的汉字
+        function getRandomWords(words, count) {
+            const shuffled = [...words].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // 全局变量
+        let currentWords = [];
+        let currentIndex = 0;
+
+        // 显示闪卡
+        function showFlashcard(index) {
+            const flashcard = document.getElementById('flashcard');
+            const character = document.getElementById('character');
+            const pinyin = document.getElementById('pinyin');
+            const meaning = document.getElementById('meaning');
+            
+            // 添加隐藏动画
+            flashcard.classList.add('hidden');
+            
+            setTimeout(() => {
+                const word = currentWords[index];
+                character.textContent = word.character;
+                pinyin.textContent = word.pinyin;
+                meaning.textContent = word.meaning;
+                
+                // 更新进度
+                document.getElementById('current').textContent = index + 1;
+                document.getElementById('total').textContent = currentWords.length;
+                
+                // 移除隐藏动画，显示新闪卡
+                flashcard.classList.remove('hidden');
+                flashcard.classList.add('show');
+            }, 300);
+        }
+
+        // 下一张闪卡
+        function nextCard() {
+            if (currentIndex < currentWords.length - 1) {
+                currentIndex++;
+                showFlashcard(currentIndex);
+            } else {
+                // 如果已经是最后一张，提示用户开始新一轮
+                if (confirm('已经学完本轮卡片，是否开始新一轮？')) {
+                    startNewRound();
+                }
+            }
+        }
+
+        // 上一张闪卡
+        function prevCard() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                showFlashcard(currentIndex);
+            }
+        }
+
+        // 开始新一轮学习
+        function startNewRound() {
+            const cardCount = getCardCount();
+            const words = getWords();
+            currentWords = getRandomWords(words, cardCount);
+            currentIndex = 0;
+            showFlashcard(currentIndex);
+        }
+
+        // 显示设置面板
+        function showSettings() {
+            document.getElementById('settings-panel').classList.add('active');
+            document.getElementById('manage-panel').classList.remove('active');
+        }
+
+        // 显示管理面板
+        function showManage() {
+            document.getElementById('manage-panel').classList.add('active');
+            document.getElementById('settings-panel').classList.remove('active');
+            updateWordList();
+        }
+
+        // 更新词库列表
+        function updateWordList() {
+            const wordList = document.getElementById('word-list');
+            const words = getWords();
+            
+            wordList.innerHTML = '';
+            words.forEach((word, index) => {
+                const wordItem = document.createElement('div');
+                wordItem.className = 'word-item';
+                wordItem.innerHTML = `
+                    <span>${word.character} (${word.pinyin}) - ${word.meaning}</span>
+                    <button class="word-delete" data-index="${index}">删除</button>
+                `;
+                wordList.appendChild(wordItem);
+            });
+            
+            // 为删除按钮添加事件监听器
+            document.querySelectorAll('.word-delete').forEach(button => {
+                button.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    deleteWord(index);
+                });
+            });
+        }
+
+        // 删除汉字
+        function deleteWord(index) {
+            const words = getWords();
+            words.splice(index, 1);
+            saveWords(words);
+            updateWordList();
+        }
+
+        // 保存设置
+        function saveSettings() {
+            const slider = document.getElementById('card-count-slider');
+            const count = parseInt(slider.value);
+            saveCardCount(count);
+            alert('设置已保存！');
+        }
+
+        // 添加新汉字
+        function addNewWord() {
+            const characterInput = document.getElementById('new-character');
+            const pinyinInput = document.getElementById('new-pinyin');
+            const meaningInput = document.getElementById('new-meaning');
+            
+            const character = characterInput.value.trim();
+            const pinyin = pinyinInput.value.trim();
+            const meaning = meaningInput.value.trim();
+            
+            if (!character || !pinyin || !meaning) {
+                alert('请输入汉字、拼音和含义！');
+                return;
+            }
+            
+            if (character.length !== 1) {
+                alert('请输入单个汉字！');
+                return;
+            }
+            
+            // 检查汉字是否已存在
+            const words = getWords();
+            const exists = words.some(word => word.character === character);
+            if (exists) {
+                alert('该汉字已存在！');
+                return;
+            }
+            
+            // 创建新的汉字对象
+            const newWord = {
+                character: character,
+                pinyin: pinyin,
+                meaning: meaning
+            };
+            
+            words.push(newWord);
+            saveWords(words);
+            alert('汉字添加成功！');
+            characterInput.value = '';
+            pinyinInput.value = '';
+            meaningInput.value = '';
+            updateWordList();
+        }
+
+        // 初始化应用
+        function initApp() {
+            // 获取设置的闪卡数量
+            const cardCount = getCardCount();
+            document.getElementById('card-count-slider').value = cardCount;
+            document.getElementById('card-count-value').textContent = cardCount;
+            
+            // 获取词库并随机选择汉字
+            const words = getWords();
+            currentWords = getRandomWords(words, cardCount);
+            
+            // 显示第一张闪卡
+            showFlashcard(currentIndex);
+            
+            // 添加事件监听器
+            document.getElementById('next-btn').addEventListener('click', nextCard);
+            document.getElementById('prev-btn').addEventListener('click', prevCard);
+            document.getElementById('round-btn').addEventListener('click', startNewRound);
+            document.getElementById('settings-btn').addEventListener('click', showSettings);
+            document.getElementById('manage-btn').addEventListener('click', showManage);
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
+            document.getElementById('add-character').addEventListener('click', addNewWord);
+            
+            // 点击卡片区域切换到下一张
+            document.getElementById('flashcard').addEventListener('click', nextCard);
+            
+            // 滑块事件监听器
+            document.getElementById('card-count-slider').addEventListener('input', function() {
+                document.getElementById('card-count-value').textContent = this.value;
+            });
+        }
+
+        // 页面加载完成后初始化应用
+        window.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>
